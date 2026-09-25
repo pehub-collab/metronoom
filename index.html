@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FFD6E8">
+    <meta name="description" content="Metronoom met maatstaf-tellen en stem">
+    <title>Metronoom</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23FFD6E8' width='192' height='192'/><circle cx='96' cy='96' r='60' fill='#fff'/></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23FFD6E8' width='180' height='180'/><circle cx='90' cy='90' r='54' fill='#fff'/></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #FFD6E8 0%, #FFE4E1 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: rgba(219, 39, 119, 0.5);
+        }
+        
+        .display {
+            text-align: center;
+        }
+        
+        .bpm-value {
+            font-size: 72px;
+            font-weight: bold;
+            color: rgba(219, 39, 119, 0.5);
+            line-height: 1;
+        }
+        
+        .bpm-label {
+            font-size: 14px;
+            color: rgba(219, 39, 119, 0.5);
+            margin-top: 8px;
+        }
+        
+        .slider-wrapper {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .slider-label {
+            font-size: 12px;
+            color: rgba(219, 39, 119, 0.5);
+            width: 30px;
+            text-align: center;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(219, 39, 119, 0.3);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: rgba(219, 39, 119, 0.7);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: rgba(219, 39, 119, 0.7);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        input[type="range"]:disabled {
+            opacity: 0.5;
+        }
+        
+        .time-sig-section {
+            text-align: center;
+            width: 100%;
+        }
+        
+        .time-sig-label {
+            font-size: 12px;
+            color: rgba(219, 39, 119, 0.5);
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        
+        .time-sig-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .time-sig-btn {
+            padding: 8px 12px;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            background: rgba(219, 39, 119, 0.3);
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .time-sig-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .time-sig-btn.active {
+            background: rgba(219, 39, 119, 0.5);
+            color: #fff;
+            border-color: #fff;
+        }
+        
+        .beats-display {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            min-height: 60px;
+            flex-wrap: wrap;
+        }
+        
+        .beat-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(219, 39, 119, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 18px;
+            transition: all 0.15s ease;
+            color: rgba(219, 39, 119, 0.4);
+        }
+        
+        .beat-circle.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: rgba(219, 39, 119, 0.4);
+        }
+        
+        .toggle-button {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            background: rgba(219, 39, 119, 0.4);
+            font-size: 18px;
+            font-weight: 500;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .toggle-button:active {
+            transform: scale(0.95);
+        }
+        
+        .toggle-button.running {
+            background: rgba(219, 39, 119, 0.5);
+            color: #fff;
+        }
+        
+        .status-text {
+            font-size: 12px;
+            color: rgba(219, 39, 119, 0.5);
+            text-align: center;
+            height: 18px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                gap: 1.2rem;
+            }
+            
+            .title {
+                font-size: 28px;
+            }
+            
+            .bpm-value {
+                font-size: 56px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Metronoom</h1>
+        
+        <div class="display">
+            <div class="bpm-value" id="bpmDisplay">120</div>
+            <div class="bpm-label">BPM</div>
+        </div>
+        
+        <div class="slider-wrapper">
+            <span class="slider-label">40</span>
+            <input type="range" id="bpmSlider" min="40" max="240" value="120" step="1">
+            <span class="slider-label">240</span>
+        </div>
+        
+        <div class="time-sig-section">
+            <div class="time-sig-label">Maat</div>
+            <div class="time-sig-buttons">
+                <button class="time-sig-btn" data-beats="1">1/4</button>
+                <button class="time-sig-btn" data-beats="2">2/4</button>
+                <button class="time-sig-btn active" data-beats="3">3/4</button>
+                <button class="time-sig-btn" data-beats="4">4/4</button>
+            </div>
+        </div>
+        
+        <div style="text-align: center; width: 100%;">
+            <div style="font-size: 12px; color: rgba(219, 39, 119, 0.5); text-align: center; margin-bottom: 12px;">Beat in maatstaf</div>
+            <div class="beats-display">
+                <div class="beat-circle" id="beat1">1</div>
+                <div class="beat-circle" id="beat2">2</div>
+                <div class="beat-circle" id="beat3">3</div>
+                <div class="beat-circle" id="beat4">4</div>
+            </div>
+        </div>
+        
+        <button class="toggle-button" id="toggleBtn">START</button>
+        
+        <div class="status-text" id="status">Selecteer maat en tempo</div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW reg failed:', err));
+        }
+
+        let isRunning = false;
+        let bpm = 120;
+        let beatCount = 0;
+        let intervalId = null;
+        let timeSignature = 3; // Default 3/4
+        let beatCircles = [];
+
+        const bpmDisplay = document.getElementById('bpmDisplay');
+        const bpmSlider = document.getElementById('bpmSlider');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const statusDiv = document.getElementById('status');
+        const beatsContainer = document.getElementById('beatsContainer');
+        const timeSignatureButtons = document.querySelectorAll('.time-sig-btn');
+
+        function updateBeatCircles() {
+            const allCircles = [document.getElementById('beat1'), document.getElementById('beat2'), document.getElementById('beat3'), document.getElementById('beat4')];
+            allCircles.forEach((circle, index) => {
+                if (index < timeSignature) {
+                    circle.style.display = 'flex';
+                } else {
+                    circle.style.display = 'none';
+                }
+            });
+            beatCircles = allCircles.slice(0, timeSignature);
+        }
+
+        function speakNumber(beatNumber) {
+            const words = ['', 'één', 'twee', 'drie', 'vier', 'vijf', 'zes', 'zeven', 'acht'];
+            const utterance = new SpeechSynthesisUtterance(words[beatNumber] || beatNumber.toString());
+            utterance.lang = 'nl-NL';
+            utterance.rate = 1.7;
+            utterance.pitch = 2.0;
+            utterance.volume = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function playBeat(beatNumber) {
+            speakNumber(beatNumber);
+
+            const circleIdx = beatNumber - 1;
+            if (beatCircles[circleIdx]) {
+                beatCircles[circleIdx].classList.add('active');
+                setTimeout(() => {
+                    beatCircles[circleIdx].classList.remove('active');
+                }, 150);
+            }
+        }
+
+        function startMetronome() {
+            isRunning = true;
+            beatCount = 0;
+            toggleBtn.textContent = 'STOP';
+            toggleBtn.classList.add('running');
+            bpmSlider.disabled = true;
+            timeSignatureButtons.forEach(btn => btn.disabled = true);
+
+            playBeat(1);
+            const interval = (60 / bpm) * 1000;
+
+            intervalId = setInterval(() => {
+                beatCount++;
+                const beatNumber = ((beatCount - 1) % timeSignature) + 1;
+                playBeat(beatNumber);
+            }, interval);
+        }
+
+        function stopMetronome() {
+            isRunning = false;
+            toggleBtn.textContent = 'START';
+            toggleBtn.classList.remove('running');
+            bpmSlider.disabled = false;
+            timeSignatureButtons.forEach(btn => btn.disabled = false);
+            clearInterval(intervalId);
+            beatCount = 0;
+            window.speechSynthesis.cancel();
+
+            beatCircles.forEach(circle => circle.classList.remove('active'));
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            if (isRunning) {
+                stopMetronome();
+            } else {
+                startMetronome();
+            }
+        });
+
+        bpmSlider.addEventListener('input', (e) => {
+            bpm = parseInt(e.target.value);
+            bpmDisplay.textContent = bpm;
+
+            if (isRunning) {
+                clearInterval(intervalId);
+                const interval = (60 / bpm) * 1000;
+                intervalId = setInterval(() => {
+                    beatCount++;
+                    const beatNumber = ((beatCount - 1) % timeSignature) + 1;
+                    playBeat(beatNumber);
+                }, interval);
+            }
+        });
+
+        timeSignatureButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!isRunning) {
+                    timeSignatureButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    timeSignature = parseInt(btn.dataset.beats);
+                    updateBeatCircles();
+                }
+            });
+        });
+
+        updateBeatCircles();
+        statusDiv.textContent = 'Selecteer maat, stel tempo in, start';
+    </script>
+</body>
+</html>
